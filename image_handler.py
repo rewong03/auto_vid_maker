@@ -64,7 +64,7 @@ def draw_frame(image_path: str, phrase: str, image_dir: str, image_name: str) ->
 
     # Need to find a better way to resize
     if width > 800 and height > 450:
-        resize_factor = max([800 / width, 450 / height])
+        resize_factor = min([800 / width, 450 / height])
         print(resize_factor)
         width = round(width * resize_factor)
         height = round(height * resize_factor)
@@ -79,14 +79,14 @@ def draw_frame(image_path: str, phrase: str, image_dir: str, image_name: str) ->
         width = round(width * resize_factor)
         height = round(height * resize_factor)
         image = image.resize((width, height))
-
+    print(width, height)
     # Could use better wrapping logic
     background.paste(image, (round((800 - width) / 2), round((450 - height) / 2)))
     draw = ImageDraw.Draw(background)
     font = ImageFont.truetype("Arial.ttf", 24)
     phrase: str = "\n".join(textwrap.wrap(phrase, width=60))
-    phrase_pix_size: int = draw.textsize(phrase, font=font)
-    draw.text((round((800 - phrase_pix_size[0]) / 2), 475), phrase, (255, 255, 255), font=font)
+    phrase_pix_size: int = draw.textsize(phrase, font=font)[0]
+    draw.text((round((800 - phrase_pix_size) / 2), 475), phrase, (255, 255, 255), font=font)
     background.save(os.path.join(image_dir, image_name))
 
     return os.path.join(image_dir, image_name)
@@ -94,6 +94,8 @@ def draw_frame(image_path: str, phrase: str, image_dir: str, image_name: str) ->
 
 
 if __name__ == "__main__":
+    draw_frame("/Users/ryan/Documents/CS/auto_vid_maker/62f4a49a-b9e2-4df3-8dc6-e420da556c94/test.jpg",
+               "this is a test", ".", "my_test.jpg")
     pass
     # import uuid
     # path = str(uuid.uuid4())

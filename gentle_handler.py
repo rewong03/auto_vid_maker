@@ -89,7 +89,7 @@ def timestamps_to_frames(timestamps: Dict, audio_path: str, fps: int = 30) -> Di
 
         if idx == 0:
             beginning_frames: int = round(timestamp["start"] * fps)
-            frames["beginning"] = {"start": 0, "end": beginning_frames}
+            frames["beginning_image"] = {"start": 0, "end": beginning_frames}
             current_no_frames += beginning_frames
 
         if idx <= len(timestamps) - 2:
@@ -97,23 +97,19 @@ def timestamps_to_frames(timestamps: Dict, audio_path: str, fps: int = 30) -> Di
             frames[phrase] = {"start": current_no_frames + 1, "end": current_no_frames + num_frames}
             current_no_frames += num_frames
         else:
-            num_frames: int = round((timestamp["end"] - timestamp["start"]) * fps)
-            frames[phrase] = {"start": current_no_frames + 1, "end": current_no_frames + num_frames}
-            current_no_frames += num_frames
-
-    frames["end"] = {"start": current_no_frames + 1, "end": total_frames}
+            frames[phrase] = {"start": current_no_frames + 1, "end": total_frames}
 
     return frames
 
 
 if __name__ == "__main__":
     my_transcript = Transcript("test_transcript.txt")
-    gentle_json = process_with_gentle(my_transcript.cleaned_transcript, "test2.wav")
+    gentle_json = process_with_gentle(my_transcript.cleaned_transcript, "test.wav")
     print(gentle_json)
     print("____")
     t = process_timestamps(my_transcript, gentle_json)
     print(t)
-    print(timestamps_to_frames(t, "test2.wav"))
+    print(timestamps_to_frames(t, "test.wav"))
 
 
 
