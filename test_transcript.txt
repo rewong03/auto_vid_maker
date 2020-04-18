@@ -1,0 +1,4 @@
+Hello! / This is a [test transcript].
+I am just [curious] whether my / test [class] works
+Here / are / a / few / lines / of / testing
+This is a {proper noun}
