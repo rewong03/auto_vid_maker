@@ -1,5 +1,6 @@
 import os
 import uuid
+from gentle_handler import process_with_gentle
 from image_handler import pull_image
 from transcript import Transcript
 
@@ -21,6 +22,8 @@ def auto_vid_maker(transcript_path: str, audio_path: str) -> str:
     os.mkdir(image_dir)
 
     for topic in transcript.topics:
+        for keywords in topic:
+            pull_image(keywords, image_dir, mode=topic[keywords])
 
-        # pull the topics
-        pass
+    gentle_json = process_with_gentle(transcript.cleaned_transcript, audio_path)
+

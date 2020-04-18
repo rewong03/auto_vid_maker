@@ -1,7 +1,7 @@
 import os
 import random
 import shutil
-from typing import List, Dict
+from typing import Dict
 from google_images_download import google_images_download
 
 
@@ -21,7 +21,7 @@ def pull_image(keywords: str, image_dir, mode: str = "random") -> str:
 
     if mode == "relevant":
         args: Dict = {"keywords": keywords, "limit": 1, "output_directory": image_dir,
-                     "no_directory": True}
+                      "no_directory": True}
         path: str = downloader.download(args)[0][keywords][0]
         print(path)
         new_path: str = os.path.join(os.path.dirname(path), keywords + ".jpg")
