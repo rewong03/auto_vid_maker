@@ -78,7 +78,7 @@ class Transcript:
 
 
 if __name__ == "__main__":
-    test_transcript = Transcript("test_transcript.txt")
+    test_transcript = Transcript("example_transcript.txt")
     print(test_transcript.raw_transcript)
     print("____")
     print(test_transcript.parsed_transcript)

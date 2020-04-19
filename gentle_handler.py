@@ -48,7 +48,7 @@ def process_timestamps(transcript_obj: Transcript, gentle_json: Dict) -> Dict:
         phrase_timestamp: Dict = {}
         for idx, word in enumerate(words_in_phrase):
             gentle_word: Dict = gentle_words.pop(0)
-            assert gentle_word["word"] == word.translate(str.maketrans('', '', string.punctuation)), "Word not found in Gentle json"
+            assert gentle_word["word"] == word.strip(string.punctuation), "Word not found in Gentle json"
 
             if idx == 0:
                 phrase_timestamp["start"] = round(gentle_word["start"], 2)
@@ -103,13 +103,13 @@ def timestamps_to_frames(timestamps: Dict, audio_path: str, fps: int = 30) -> Di
 
 
 if __name__ == "__main__":
-    my_transcript = Transcript("test_transcript.txt")
-    gentle_json = process_with_gentle(my_transcript.cleaned_transcript, "test.wav")
+    my_transcript = Transcript("example_transcript.txt")
+    gentle_json = process_with_gentle(my_transcript.cleaned_transcript, "example.wav")
     print(gentle_json)
     print("____")
     t = process_timestamps(my_transcript, gentle_json)
     print(t)
-    print(timestamps_to_frames(t, "test.wav"))
+    print(timestamps_to_frames(t, "example.wav"))
 
 
 

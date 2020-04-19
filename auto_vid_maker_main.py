@@ -26,7 +26,7 @@ def auto_vid_maker(transcript_path: str, audio_path: str, video_name: str, fps: 
 
     for topic in transcript.topics:
         for keywords in topic:
-            pull_image(keywords, image_dir, mode=topic[keywords])
+            print(pull_image(keywords, image_dir, mode=topic[keywords]))
 
     gentle_json = process_with_gentle(transcript.cleaned_transcript, audio_path)
     timestamps = process_timestamps(transcript, gentle_json)
@@ -54,10 +54,6 @@ def auto_vid_maker(transcript_path: str, audio_path: str, video_name: str, fps: 
 
 
 if __name__ == "__main__":
-    while True:
-        try:
-            auto_vid_maker("test_transcript.txt", "test.wav", "full_test.mp4")
-            break
-        except:
-            pass
+    auto_vid_maker("example_transcript.txt", "example.wav", "example_video.mp4")
+    # auto_vid_maker("test_transcript.txt", "test.wav", "my_test.mp4")
 

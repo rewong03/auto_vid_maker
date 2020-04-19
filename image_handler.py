@@ -1,5 +1,6 @@
 import os
 import random
+import subprocess
 import shutil
 import textwrap
 from typing import Dict
@@ -19,30 +20,23 @@ def pull_image(keywords: str, image_dir, mode: str = "random") -> str:
     Returns:
     new_path (str): Path to downloaded image.
     """
-    downloader = google_images_download.googleimagesdownload()
+    image_dir = os.path.join(image_dir, keywords)
 
-    if mode == "relevant":
-        args: Dict = {"keywords": keywords, "limit": 1, "output_directory": image_dir,
-                      "no_directory": True}
-        path: str = downloader.download(args)[0][keywords][0]
-        new_path: str = os.path.join(os.path.dirname(path), keywords + ".jpg")
-        os.rename(path, new_path)
+    if not os.path.isdir(image_dir):
+        os.mkdir(image_dir)
 
-        return new_path
-    else:
-        # Currently this method downloads all images before choosing which is slow but there is no gurantee
-        # that if we randomly chose a link it would work.
-        args: Dict = {"keywords": keywords, "limit": 50, "output_directory": image_dir,
-                      "image_directory": keywords}
-        path: str = downloader.download(args)[0][keywords][random.randint(0, 49)]
-        new_path: str = os.path.join(os.path.dirname(os.path.dirname(path)), os.path.basename(path))
-        os.rename(path, new_path)
-        shutil.rmtree(os.path.dirname(path))
-        path = new_path
-        new_path: str = os.path.join(os.path.dirname(new_path), keywords + ".jpg")
-        os.rename(path, new_path)
+    limit = 50 if mode == "random" else 1
+    cmd: str = f"python Bulk-Bing-Image-downloader/bbid.py -s \"{keywords}\" -o \"{image_dir}\" --limit {limit}"
+    subprocess.call(cmd, shell=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+    path = os.path.join(image_dir, os.listdir(image_dir)[random.randint(0, len(os.listdir(image_dir)) - 1)])
+    new_path: str = os.path.join(os.path.dirname(os.path.dirname(path)), os.path.basename(path))
+    os.rename(path, new_path)
+    shutil.rmtree(os.path.dirname(path))
+    path = new_path
+    new_path: str = os.path.join(os.path.dirname(image_dir), keywords + ".jpg")
+    os.rename(path, new_path)
 
-        return new_path
+    return new_path
 
 
 def draw_frame(image_path: str, phrase: str, image_dir: str, image_name: str) -> str:
@@ -79,8 +73,7 @@ def draw_frame(image_path: str, phrase: str, image_dir: str, image_name: str) ->
         width = round(width * resize_factor)
         height = round(height * resize_factor)
         image = image.resize((width, height))
-    print(width, height)
-    # Could use better wrapping logic
+    # Could use better line wrapping logic
     background.paste(image, (round((800 - width) / 2), round((450 - height) / 2)))
     draw = ImageDraw.Draw(background)
     font = ImageFont.truetype("Arial.ttf", 24)
@@ -94,8 +87,6 @@ def draw_frame(image_path: str, phrase: str, image_dir: str, image_name: str) ->
 
 
 if __name__ == "__main__":
-    draw_frame("/Users/ryan/Documents/CS/auto_vid_maker/62f4a49a-b9e2-4df3-8dc6-e420da556c94/test.jpg",
-               "this is a test", ".", "my_test.jpg")
     pass
     # import uuid
     # path = str(uuid.uuid4())

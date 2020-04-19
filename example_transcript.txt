@@ -1,0 +1,12 @@
+This is an example of my [automatic video maker] / written in {python}.
+It utilizes [gentle], / a [python library], / and {google} images.
+All it needs is an [annotated transcript] /  and an [audio recording]!
+The recording is a [reading] of the transcript.
+The transcript [divides] sentences / into phrases using [slashes] / and denotes topics with [brackets].
+The [topics] are then used / to [show images] and / the images are shown for the [length] of the phrase.
+The program then [processes] these files / and uses gentle to [sync] the two together.
+Then the program uses {google images} to search / for [topic images] and puts everything together.
+By [annotating] the transcript in different ways, / you can show [different images].
+For [example]: / the / great / wall / of {china} / is [different] from / [the great wall of china].
+Isn't that [cool]?
+Feel free to try out the program [yourself]!
