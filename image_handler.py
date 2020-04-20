@@ -5,10 +5,9 @@ import shutil
 import textwrap
 from typing import Dict
 from PIL import Image, ImageFont, ImageDraw
-from google_images_download import google_images_download
 
 
-def pull_image(keywords: str, image_dir, mode: str = "random") -> str:
+def pull_image(keywords: str, image_dir, mode: str = "random", threads: int = 20) -> str:
     """Pulls images with a certain keyword.
 
     Parameters:
@@ -26,8 +25,9 @@ def pull_image(keywords: str, image_dir, mode: str = "random") -> str:
         os.mkdir(image_dir)
 
     limit = 50 if mode == "random" else 1
-    cmd: str = f"python Bulk-Bing-Image-downloader/bbid.py -s \"{keywords}\" -o \"{image_dir}\" --limit {limit}"
-    subprocess.call(cmd, shell=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+    cmd: str = f"python Bulk-Bing-Image-downloader/bbid.py -s \"{keywords}\" -o \"{image_dir}\" --limit {limit} --threads {threads}"
+    #subprocess.call(cmd, shell=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+    subprocess.call(cmd, shell=True)
     path = os.path.join(image_dir, os.listdir(image_dir)[random.randint(0, len(os.listdir(image_dir)) - 1)])
     new_path: str = os.path.join(os.path.dirname(os.path.dirname(path)), os.path.basename(path))
     os.rename(path, new_path)
@@ -59,7 +59,6 @@ def draw_frame(image_path: str, phrase: str, image_dir: str, image_name: str) ->
     # Need to find a better way to resize
     if width > 800 and height > 450:
         resize_factor = min([800 / width, 450 / height])
-        print(resize_factor)
         width = round(width * resize_factor)
         height = round(height * resize_factor)
         image = image.resize((width, height))
@@ -85,8 +84,29 @@ def draw_frame(image_path: str, phrase: str, image_dir: str, image_name: str) ->
     return os.path.join(image_dir, image_name)
 
 
-
 if __name__ == "__main__":
+    import time
+    import matplotlib.pyplot as plt
+    import concurrent.futures
+    x = []
+    y = []
+    for threads in range(5, 45, 5):
+        print(f"STARTING {threads} threads")
+        os.mkdir("test")
+        script = "According to all known laws of aviation, there is no way a bee should be able to fly. Its wings are too small to get its fat little body off the ground.".split()
+        t0 = time.time()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+            executor.map(lambda x: pull_image(x, "test", threads=threads), script)
+
+        t1 = time.time() - t0
+        print(t1)
+        x.append(threads)
+        y.append(t1)
+        shutil.rmtree("test")
+    print(x)
+    print(y)
+    plt.scatter(x, y)
+    plt.show()
     pass
     # import uuid
     # path = str(uuid.uuid4())
