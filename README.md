@@ -55,4 +55,10 @@ chosen instead, use `{}` instead.
 ## Audio Recording
 The audio recording is a .wav reading of the annotated transcript. :/ currently if Gentle fails to align the transcript 
 and audio recording then the entire program will fail.
- 
+
+## Running the program
+To run the program use the following command:
+    
+        python auto_vid_maker.py transcript_path audio_path video_path
+
+Use the `-h` flag for more help. 

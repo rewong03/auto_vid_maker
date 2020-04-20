@@ -1,3 +1,4 @@
+import argparse
 import concurrent.futures
 import os
 import subprocess
@@ -9,16 +10,18 @@ from image_handler import draw_frame, pull_image
 from transcript import Transcript
 
 
-def auto_vid_maker(transcript_path: str, audio_path: str, video_name: str, fps: int = 30) -> str:
+def auto_vid_maker(transcript_path: str, audio_path: str, video_path: str, fps: int = 30,
+                   threads: int = 15, silent: bool = False) -> str:
     """Creates a video of images synced with a transcript and audio
     recording.
 
     Parameters:
     transcript_path (str): Path to annotated transcript.
     audio_path (str): Path to audio recording of transcript.
+    video_path (str): Location to create video.
 
     Returns:
-    vid_path (str): Path to video.
+    video_path (str): Path to video.
     """
     print("Parsing transcript...")
     transcript: Transcript = Transcript(transcript_path)
@@ -30,7 +33,7 @@ def auto_vid_maker(transcript_path: str, audio_path: str, video_name: str, fps: 
     print("Downloading images...")
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
-        executor.map(lambda x: pull_image(x[0], image_dir, mode=x[1], threads=15),
+        executor.map(lambda x: pull_image(x[0], image_dir, mode=x[1], threads=threads, silent=silent),
                      [(keywords, topic[keywords]) for topic in transcript.topics for keywords in topic])
 
     print("Processing transcript...")
@@ -60,17 +63,24 @@ def auto_vid_maker(transcript_path: str, audio_path: str, video_name: str, fps: 
     temp_vid: str = os.path.join(frames_dir, str(uuid.uuid4()) + ".mp4")
     cmd: str = f"ffmpeg -r {fps} -f image2 -s 800x600 -i {frames_dir}/%d.jpg -vcodec libx264 -crf 25  -pix_fmt yuv420p {temp_vid}"
     subprocess.call(cmd, shell=True)
-    subprocess.call(f"ffmpeg -i {audio_path} -i {temp_vid} {video_name}", shell=True)
+    subprocess.call(f"ffmpeg -i {audio_path} -i {temp_vid} {video_path}", shell=True)
 
     rmtree(image_dir)
 
-    return os.path.abspath(video_name)
+    return os.path.abspath(video_path)
 
 
 if __name__ == "__main__":
-    import time
-    t0 = time.time()
-    auto_vid_maker("example_transcript.txt", "example_audio.wav", "example_video.mp4")
-    print(time.time() - t0)
-    # auto_vid_maker("test_transcript.txt", "test.wav", "my_test.mp4")
+    parser = argparse.ArgumentParser(description="Creates a video of images from an annotated transcript and audio recording")
+
+    parser.add_argument("transcript_path", type=str, help="Path to annotated transcript")
+    parser.add_argument("audio_path", type=str, help="Path to .wav audio recording")
+    parser.add_argument("video_path", type=str, help="Location to create video")
+    parser.add_argument("--fps", required=False, type=int, default=30, help="FPS of video")
+    parser.add_argument("--threads", required=False, type=int, default=15, help="No. threads to use to pull images")
+    parser.add_argument("--verbose", required=False, type=bool, default=False, help="Whether to print pulling messages")
+
+    args = parser.parse_args()
+    print(auto_vid_maker(args.transcript_path, args.audio_path, args.video_path, fps=args.fps, threads=args.threads,
+                         silent=not args.verbose))
 
