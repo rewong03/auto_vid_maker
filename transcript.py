@@ -1,5 +1,5 @@
 import re
-from typing import List, Dict
+from typing import Dict, List
 
 
 class Transcript:
@@ -20,7 +20,8 @@ class Transcript:
         self.cleaned_phrases: List[str] = list(map(self.clean_phrase, self.raw_phrases))
         self.cleaned_transcript: str = " ".join(self.cleaned_phrases)
 
-    def split_phrases(self, raw_transcript: str) -> List[str]:
+    @staticmethod
+    def split_phrases(raw_transcript: str) -> List[str]:
         """Splits a raw transcript along newline and slashes.
 
         Parameters:
@@ -51,18 +52,20 @@ class Transcript:
         for raw_phrase in raw_phrases:
             random_topic: List[str] = re.findall("\[.*\]", raw_phrase)
             relevant_topic: List[str] = re.findall("\{.*\}", raw_phrase)
-            if random_topic and relevant_topic:
-                raise ValueError("Can't have two topics in a line.")
-            elif random_topic:
+
+            assert not(random_topic and relevant_topic), "Can't have two topics in a line."
+
+            if random_topic:
                 parsed_transcript[self.clean_phrase(raw_phrase)] = {random_topic[0][1: -1]: "random"}
-            elif relevant_topic:
+            if relevant_topic:
                 parsed_transcript[self.clean_phrase(raw_phrase)] = {relevant_topic[0][1: -1]: "relevant"}
             else:
                 parsed_transcript[self.clean_phrase(raw_phrase)] = {self.clean_phrase(raw_phrase): "random"}
 
         return parsed_transcript
 
-    def clean_phrase(self, raw_phrase: str) -> str:
+    @staticmethod
+    def clean_phrase(raw_phrase: str) -> str:
         """Cleans brackets from a phrase.
 
         Parameters:
@@ -78,13 +81,4 @@ class Transcript:
 
 
 if __name__ == "__main__":
-    test_transcript = Transcript("example_transcript.txt")
-    print(test_transcript.raw_transcript)
-    print("____")
-    print(test_transcript.parsed_transcript)
-    print("____")
-    print(test_transcript.cleaned_transcript)
-    print("____")
-    print(test_transcript.topics)
-    print("____")
-    print(test_transcript.raw_phrases)
+    pass

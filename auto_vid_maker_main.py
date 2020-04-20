@@ -3,8 +3,9 @@ import os
 import subprocess
 import uuid
 from shutil import copyfile, rmtree
-from gentle_handler import process_with_gentle, process_timestamps, timestamps_to_frames
-from image_handler import pull_image, draw_frame
+from typing import Dict
+from gentle_handler import process_timestamps, process_with_gentle, timestamps_to_frames
+from image_handler import draw_frame, pull_image
 from transcript import Transcript
 
 
@@ -19,44 +20,45 @@ def auto_vid_maker(transcript_path: str, audio_path: str, video_name: str, fps: 
     Returns:
     vid_path (str): Path to video.
     """
+    print("Parsing transcript...")
     transcript: Transcript = Transcript(transcript_path)
 
     image_dir: str = str(uuid.uuid4())
     os.mkdir(image_dir)
     copyfile("beginning_image.jpg", os.path.join(image_dir, "beginning_image.jpg"))
 
-    t0 = time.time()
+    print("Downloading images...")
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
         executor.map(lambda x: pull_image(x[0], image_dir, mode=x[1], threads=15),
                      [(keywords, topic[keywords]) for topic in transcript.topics for keywords in topic])
 
-    print(f"DOWNLOAD TIME: {time.time() - t0}")
+    print("Processing transcript...")
 
-    gentle_json = process_with_gentle(transcript.cleaned_transcript, audio_path)
-    timestamps = process_timestamps(transcript, gentle_json)
-    time_frames = timestamps_to_frames(timestamps, audio_path, fps=fps)
-    frames_dir = os.path.join(image_dir, "frames")
+    gentle_json: Dict = process_with_gentle(transcript.cleaned_transcript, audio_path)
+    timestamps: Dict[str, Dict[str, float]] = process_timestamps(transcript, gentle_json)
+    time_frames: Dict[str, Dict[str, int]] = timestamps_to_frames(timestamps, audio_path, fps=fps)
+    frames_dir: str = os.path.join(image_dir, "frames")
     os.mkdir(frames_dir)
 
-    t0 = time.time()
+    print("Creating frames...")
 
     for phrase in time_frames:
         if phrase != "beginning_image":
-            topic = list(transcript.parsed_transcript[phrase].keys())[0]
+            topic: str = list(transcript.parsed_transcript[phrase].keys())[0]
         else:
-            topic = phrase
-        frame_path = draw_frame(os.path.join(image_dir, topic + ".jpg"),
-                                phrase, frames_dir,
-                                str(time_frames[phrase]["start"]) + ".jpg")
+            topic: str = phrase
+        frame_path: str = draw_frame(os.path.join(image_dir, topic + ".jpg"),
+                                     phrase, frames_dir,
+                                     str(time_frames[phrase]["start"]) + ".jpg")
 
         for frame_num in range(time_frames[phrase]["start"] + 1, time_frames[phrase]["end"] + 1):
             copyfile(frame_path, os.path.join(frames_dir, str(frame_num) + ".jpg"))
 
-    print(f"FRAME CREATION TIME: {time.time() - t0}")
+    print("Creating video...")
 
-    temp_vid = os.path.join(frames_dir, str(uuid.uuid4()) + ".mp4")
-    cmd = f"ffmpeg -r {fps} -f image2 -s 800x600 -i {frames_dir}/%d.jpg -vcodec libx264 -crf 25  -pix_fmt yuv420p {temp_vid}"
+    temp_vid: str = os.path.join(frames_dir, str(uuid.uuid4()) + ".mp4")
+    cmd: str = f"ffmpeg -r {fps} -f image2 -s 800x600 -i {frames_dir}/%d.jpg -vcodec libx264 -crf 25  -pix_fmt yuv420p {temp_vid}"
     subprocess.call(cmd, shell=True)
     subprocess.call(f"ffmpeg -i {audio_path} -i {temp_vid} {video_name}", shell=True)
 

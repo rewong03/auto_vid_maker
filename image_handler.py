@@ -1,13 +1,12 @@
 import os
 import random
-import subprocess
 import shutil
+import subprocess
 import textwrap
-from typing import Dict
-from PIL import Image, ImageFont, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 
-def pull_image(keywords: str, image_dir, mode: str = "random", threads: int = 20) -> str:
+def pull_image(keywords: str, image_dir, mode: str = "random", threads: int = 20, silent: bool = False) -> str:
     """Pulls images with a certain keyword.
 
     Parameters:
@@ -19,20 +18,24 @@ def pull_image(keywords: str, image_dir, mode: str = "random", threads: int = 20
     Returns:
     new_path (str): Path to downloaded image.
     """
-    image_dir = os.path.join(image_dir, keywords)
+    image_dir: str = os.path.join(image_dir, keywords)
 
     if not os.path.isdir(image_dir):
         os.mkdir(image_dir)
 
-    limit = 50 if mode == "random" else 1
+    limit: int = 50 if mode == "random" else 1
     cmd: str = f"python Bulk-Bing-Image-downloader/bbid.py -s \"{keywords}\" -o \"{image_dir}\" --limit {limit} --threads {threads}"
-    #subprocess.call(cmd, shell=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
-    subprocess.call(cmd, shell=True)
-    path = os.path.join(image_dir, os.listdir(image_dir)[random.randint(0, len(os.listdir(image_dir)) - 1)])
+
+    if silent:
+        subprocess.call(cmd, shell=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+    else:
+        subprocess.call(cmd, shell=True)
+
+    path: str = os.path.join(image_dir, os.listdir(image_dir)[random.randint(0, len(os.listdir(image_dir)) - 1)])
     new_path: str = os.path.join(os.path.dirname(os.path.dirname(path)), os.path.basename(path))
     os.rename(path, new_path)
     shutil.rmtree(os.path.dirname(path))
-    path = new_path
+    path: str = new_path
     new_path: str = os.path.join(os.path.dirname(image_dir), keywords + ".jpg")
     os.rename(path, new_path)
 
@@ -56,22 +59,22 @@ def draw_frame(image_path: str, phrase: str, image_dir: str, image_name: str) ->
     image = Image.open(image_path)
     width, height = image.size
 
-    # Need to find a better way to resize
     if width > 800 and height > 450:
-        resize_factor = min([800 / width, 450 / height])
-        width = round(width * resize_factor)
-        height = round(height * resize_factor)
+        resize_factor: float = min([800 / width, 450 / height])
+        width: int = round(width * resize_factor)
+        height: int = round(height * resize_factor)
         image = image.resize((width, height))
     elif width > 800:
-        resize_factor = 800 / width
-        width = round(width * resize_factor)
-        height = round(height * resize_factor)
+        resize_factor: float = 800 / width
+        width: int = round(width * resize_factor)
+        height: int = round(height * resize_factor)
         image = image.resize((width, height))
     elif height > 500:
-        resize_factor = 500 / height
-        width = round(width * resize_factor)
-        height = round(height * resize_factor)
+        resize_factor: float = 500 / height
+        width: int = round(width * resize_factor)
+        height: int = round(height * resize_factor)
         image = image.resize((width, height))
+
     # Could use better line wrapping logic
     background.paste(image, (round((800 - width) / 2), round((450 - height) / 2)))
     draw = ImageDraw.Draw(background)
@@ -85,32 +88,4 @@ def draw_frame(image_path: str, phrase: str, image_dir: str, image_name: str) ->
 
 
 if __name__ == "__main__":
-    import time
-    import matplotlib.pyplot as plt
-    import concurrent.futures
-    x = []
-    y = []
-    for threads in range(5, 45, 5):
-        print(f"STARTING {threads} threads")
-        os.mkdir("test")
-        script = "According to all known laws of aviation, there is no way a bee should be able to fly. Its wings are too small to get its fat little body off the ground.".split()
-        t0 = time.time()
-        with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
-            executor.map(lambda x: pull_image(x, "test", threads=threads), script)
-
-        t1 = time.time() - t0
-        print(t1)
-        x.append(threads)
-        y.append(t1)
-        shutil.rmtree("test")
-    print(x)
-    print(y)
-    plt.scatter(x, y)
-    plt.show()
     pass
-    # import uuid
-    # path = str(uuid.uuid4())
-    # os.mkdir(path)
-    # print(pull_image("ryan wong uchicago", path, mode="random"))
-
-    #draw_frame("big_images.jpg", "Here is a very long phrase. It is intentionally very long in the hopes of forcing text wrap to work so that I can debug errors", ".", "my_test1.jpg")
